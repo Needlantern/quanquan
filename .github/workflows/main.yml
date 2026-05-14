@@ -1,0 +1,30 @@
+name: Auto Trojan Config Update
+
+on:
+  schedule:
+    - cron: '*/20 * * * *'  # 每20分钟运行一次
+  workflow_dispatch:       # 允许手动触发（可选）
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate config.txt
+        run: |
+          DOMAINS=("flightless-unpained.mongroup.click"  "unprenticed-unsurvived.mongroup.click" "savonarolist-hvy.mongroup.click" "cancionero-archimandrite.mongroup.click" "demur-diciest.mongroup.click")
+          PORT=443
+          > config.txt
+          for domain in "${DOMAINS[@]}"; do
+            uuid=$(cat /proc/sys/kernel/random/uuid)
+            echo "trojan = ${domain}:${PORT} , password = ${uuid} , over-tls=true , tls-verification=false , fast-open = false , tag=${domain}" >> config.txt
+          done
+
+      - name: Commit & Push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add config.txt
+          git commit -m "Update config.txt [auto]" || exit 0
+          git push
